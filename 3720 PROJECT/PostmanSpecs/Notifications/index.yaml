@@ -1,0 +1,292 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Notification Services API"
+  description: Notification Services API
+
+# ---------API Server Information---------
+servers:
+  - url: https://www.tigerchow.com/api
+
+paths:
+  /notification/:
+    get:
+      description: "Retrieve sent notifications with query parameters"
+      parameters:
+        - name: notif_type
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by type"
+        - name: time_sent
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by time sent (ISO8601)"
+        - name: notif_id
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by id"
+        - name: id
+          in: query
+          schema:
+            type: string
+          description: "ID of the user"
+        - name: method
+          in: query
+          schema:
+            type: string
+            enum:
+              - "Phone"
+              - "SMS"
+              - "Email"
+          description: "Notification method"
+
+      responses:
+        "200":
+          description: "A list of notification types"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SentNotification"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    delete:
+      description: "Remove notifications, with query parameters"
+      parameters:
+        - name: notif_type
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by type"
+        - name: time_sent
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by time sent (ISO8601 Time)"
+        - name: notif_id
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by id"
+        - name: id
+          in: query
+          schema:
+            type: string
+          description: "ID of the user"
+        - name: method
+          in: query
+          schema:
+            type: string
+            enum:
+              - "Phone"
+              - "SMS"
+              - "Email"
+          description: "Notification method"
+
+      responses:
+        "200":
+          description: Successfully removed notifications
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+    post:
+      description: Post a notification to an account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SentNotification"
+
+      # Responses to creating a particular users
+      responses:
+        "201":
+          description: Successfully sent notification
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+  /notification/type:
+    get:
+      description: "Retrieve all notifications types"
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by type"
+        - name: description
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by description"
+        - name: message
+          in: query
+          schema:
+            type: string
+          description: "Filter notifications by message"
+
+      responses:
+        "200":
+          description: "A list of notification types"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                 $ref: "#/components/schemas/Notification"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+    post:
+      description: "Create a new notification type"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Notification"
+      responses:
+        "201":
+          description: Created a new notification
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+    patch:
+      description: "Update a notification type"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchNotification"
+      responses:
+        "200":
+          description: Updated a notification
+          $ref: "#/components/schemas/Notification"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+          
+    delete:
+      description: "Delete a notification type"
+      parameters:
+        - name: "id"
+          in: query
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Deleted the notfication
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+components:
+  schemas:
+    AccountId:
+      description: The unique identifier of an account
+      type: string
+
+    PatchNotification:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the notification"
+        key:
+          type: string
+          description: "Key to update"
+        value:
+          type: string
+          description: "Value to update"
+      required:
+        - id
+        - key
+        - value
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the notification"
+        type:
+          type: string
+          description: "Type of the notification"
+        message:
+          type: string
+          description: "Content of the notification"
+      required:
+        - id
+        - type
+        - message
+
+    SentNotification:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the user"
+        method:
+          type: string
+          description: "Method of notification sent"
+          enum:
+            - "Phone"
+            - "SMS"
+            - "Email"
+        notif_id:
+          type: string
+          description: "Unique identifier for the notification"
+        notif_type:
+          type: string
+          description: "Type of the notification"
+        time_sent:
+          type: string
+          description: "Time and date of the notifcation (ISO8601)"
+      required:
+        - notif_id
+        - method
+        - notif_type
+        - id
+        - time_sent
+
+  responses:
+    400Error:
+      description: Invalid Client Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                description: A human readable error message
+                type: string
+
+    # A schema for general 500 error code information
+    500Error:
+      description: Unexpected Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                description: A human readable error message
+                type: string

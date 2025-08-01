@@ -1,0 +1,312 @@
+# Account Services API
+#
+#
+# Description: This API includes the header API information, the Server information,
+#              the user account paths, the user account components such as parameters,
+#              responses, and schema's. This API also includes user accounts and their
+#              properties.
+#
+# Purpose: This API allows the various website users to create accounts, login
+#          into https://www.cusports.com and search/adjust various settings.
+#          It is also used by the CUSports admin to manage account information.
+
+
+# ---------General API Information---------
+  openapi: '3.0.0'
+  info:
+    version: '1.0.0'
+    title: 'Account Services API'
+    description: Account Services API
+  
+  # ---------API Server Information---------
+  servers:
+    - url: https://www.tigerchow.com/api
+  
+  # ---------API Paths Information---------
+  paths:
+    # Users can be customers, business users, customer service reps, admin, or other employees; personal information is also stored
+    /account:
+  
+      # Get all user accounts
+      get:
+        description: Returns a list of user accounts and filter
+        parameters:
+          - $ref: '#/components/parameters/AccountStatus'
+          - $ref: '#/components/parameters/AccountType'
+  
+        # Responses to getting the list of all users
+        responses:
+          '200':
+            description: Retrieved the list of all user accounts successfully
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/account'
+          '400':
+            description: Did not reach the server successfully
+            $ref: '#/components/responses/400Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+  
+      # Creates a user account with user entered properties; assigns user with an id
+      post:
+        description: Allows you to add a new account or accounts to the system
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/account'
+  
+        # Responses to creating a particular users
+        responses:
+          '201':
+            description: Successfully added a new user account
+          '400':
+            $ref: '#/components/responses/400Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+      
+      delete:
+        description: Deletes all accounts
+        responses:
+          '200':
+            description: 'All accounts removed'
+          '400':
+            $ref: '#/components/responses/400Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+  
+  
+    # Login path for every user account to login into the website
+    /account/login:
+  
+      # Gets the particular user account information depending on which user logged in
+      post:
+        description: login a user to the TigerChow Website
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/loginCredentials'
+  
+        # Responses to the particular user logging in at the time
+        responses:
+          '200':
+            description: Login Successful (Give Security Token by Security Services)
+          '400':
+            $ref: '#/components/responses/400Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+  
+    # User's id path that allows users to fetch or edit a particular user account
+    /account/{id}:
+      parameters:
+        - name: id
+          description: The unique identifier of a user
+          in: path
+          required: true
+          schema:
+            type: string
+  
+      # Retrieve the information for a user by id
+      get:
+        description: Retrieve a specific user by an id
+  
+        # Responses to retrieving a particular user
+        responses:
+          '200':
+            description: Sucessfully returned The user corresponding to the provided `id`
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/account'
+          '400':
+            $ref: '#/components/responses/400Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+  
+  
+        # Permanently deletes a user
+      delete:
+        description: deletes a user's account
+  
+        # Responses to deleting a particular user
+        responses:
+          '200':
+            description: Successfully deleted user
+          '400':
+            $ref: '#/components/responses/400Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+  
+      patch:
+        description: Updates the user's preferences
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updateKey:
+                      type: string
+                  updateValue:
+                      type: string
+        
+        responses:
+          '200':
+            description: Updated successfully
+          '400':
+            $ref: '#/components/responses/400Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+  
+  
+  # ---------API Components Information---------
+  # Contains all reusable parameters, responses, and schemas for the Accounts API
+  components:
+  
+    # ---------Parameters---------
+    parameters:
+  
+      # Helps set the limit of user accounts on a single page
+      AccountStatus:
+        name: acc_status
+        in: query
+        description: Status of account (active or inactive)
+        schema:
+          type: string
+          enum:
+            - active
+            - inactive
+  
+      # Helps to select which page of user accounts to be displayed
+      AccountType:
+        name: acc_type
+        in: query
+        description: Type of account
+        schema:
+          type: string
+          enum:
+              - restaraunt_employee
+              - standard_user
+              - business_user
+              - customer_service_rep
+              - delivery_driver
+              - guest
+              - admin
+  
+    # ---------API Responses Information---------
+    responses:
+  
+      # A schema for general 400 error code information
+      400Error:
+        description: Invalid Client Request
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  description: A human readable error message
+                  type: string
+  
+      # A schema for general 500 error code information
+      500Error:
+        description: Unexpected Server Error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  description: A human readable error message
+                  type: string
+  
+    # ---------API Schemas Information---------
+    schemas:
+      # Login Credential schema to be re-used throughout the API
+      loginCredentials:
+        description: The requirements to login
+        type: object
+        required:
+          - email
+          - password
+        properties:
+          email:
+            type: string
+          password:
+            type: string
+  
+      # User Preferences schema to be re-used throughout the API
+      userPreferences:
+        description: represents the preferences that a user may have
+        type: object
+        required:
+          - user_type
+          - notif_prefrence
+          - email
+          - inactive
+        properties:
+          inactive:
+            type: boolean
+          email:
+            type: string
+          notif_prefrence:
+            type: string
+            enum:
+              - email
+              - phone
+          user_type:
+            type: string
+            enum:
+              - restaraunt_employee
+              - standard_user
+              - business_user
+              - customer_service_rep
+              - delivery_driver
+              - guest
+              - admin
+  
+      # User account schema to be re-used throughout the API
+      account:
+        description: A single user account for the TigerChow application
+        type: object
+        required:
+          - id
+          - username
+          - preferences
+          - credentials
+          - last_login
+  
+        properties:
+          # Unique ID for a given user
+          id:
+            type: string
+          username:
+            type: string
+          # Timestamp of last login
+          last_login:
+            type: string
+          # User Preferences of the user
+          preferences:
+            $ref: "#/components/schemas/userPreferences"
+          # User's credentials
+          credentials:
+            $ref: "#/components/schemas/loginCredentials"
+            
+  
+    # ---------API SecuritySchemes Information NOT NEEDED FOR 3720---------
+    #securitySchemes:
+    #  ApiKey:
+    #    type: apiKey
+    #    in: header
+    #    name: X-Api-Key
+  
+  # ---------API Security Information  NOT NEEDED FOR 3720---------
+  #security:
+  #  - ApiKey: []

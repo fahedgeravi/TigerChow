@@ -1,0 +1,257 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Order Services API"
+  description: Order Services API
+
+servers:
+  - url: https://www.tigerchow.com/api
+
+paths:
+  /order/:
+    get:
+      summary: "Retrieve all orders"
+      description: "Retrieve all orders filtered by query parameters."
+      parameters:
+        - name: time_created
+          in: query
+          schema:
+            type: string
+          description: "Filter orders by creation time (ISO8601)"
+        - name: user_id
+          in: query
+          schema:
+            type: string
+          description: "Filter orders by user id"
+        - name: restaurant_name
+          in: query
+          schema:
+            type: string
+          description: "Filter orders by restaurant name"
+        - name: order_status
+          in: query
+          schema:
+            type: string
+            enum: ["created", "cancelled", "being_prepared", "on_the_way", "ready_for_pickup", "delivered"]
+          description: "Filter orders by order status"
+      responses:
+        "200":
+          description: "A list of orders"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    post:
+      summary: "Create a new order"
+      description: "Create a new order with provided order items and user information."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrder"
+      responses:
+        "201":
+          description: "Order created successfully"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    delete:
+      summary: "Delete orders"
+      description: "Delete orders based on provided query parameters."
+      parameters:
+        - name: time_created
+          in: query
+          schema:
+            type: string
+          description: "Filter orders by creation time (ISO8601)"
+        - name: user_id
+          in: query
+          schema:
+            type: string
+          description: "Filter orders by user id"
+        - name: restaurant_name
+          in: query
+          schema:
+            type: string
+          description: "Filter orders by restaurant name"
+        - name: order_status
+          in: query
+          schema:
+            type: string
+            enum: ["created", "cancelled", "being_prepared", "on_the_way", "ready_for_pickup", "delivered"]
+          description: "Filter orders by order status"
+      responses:
+        "200":
+          description: "Orders deleted successfully"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+  /order/{order_id}:
+    parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "Unique identifier for the order"
+    get:
+      summary: "Retrieve order details"
+      description: "Retrieve order details by order ID."
+      responses:
+        "200":
+          description: "Order details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    patch:
+      summary: "Update an order"
+      description: "Update order items—add, remove, or modify items—in the specified order."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updateKey:
+                  type: string
+                updateValue:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+
+
+      responses:
+        "200":
+          description: "Order updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    delete:
+      summary: "Delete an order"
+      description: "Delete the specified order by order ID."
+      responses:
+        "200":
+          description: "Order deleted successfully"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        order_id:
+          type: string
+          description: "Unique identifier for the order"
+        user_id:
+          type: string
+          description: "Identifier for the user who placed the order"
+        restaurant_name:
+          type: string
+          description: "Name of the restaurant where the order was placed"
+        items:
+          type: array
+          description: "List of food items in the order"
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        time_created:
+          type: string
+          description: "Time the order was created (ISO8601)"
+        total_price:
+          type: string
+          description: "Total price of the order"
+        status:
+          type: string
+          description: "Current status of the order"
+          enum: ["created", "cancelled", "being_prepared", "on_the_way", "ready_for_pickup", "delivered"]
+      required:
+        - order_id
+        - user_id
+        - restaurant_name
+        - items
+        - time_created
+        - total_price
+        - status
+
+    NewOrder:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: "Identifier of the user placing the order"
+        items:
+          type: array
+          description: "List of food items to be ordered"
+          items:
+            $ref: "#/components/schemas/OrderItem"
+      required:
+        - user_id
+        - items
+
+    OrderItem:
+      type: object
+      properties:
+        item_id:
+          type: string
+          description: "Unique identifier for the food item"
+        name:
+          type: string
+          description: "Name of the food item"
+        quantity:
+          type: string
+          description: "Quantity of the food item ordered"
+        price:
+          type: string
+          description: "Price of the food item"
+      required:
+        - item_id
+        - name
+        - quantity
+        - price
+
+  responses:
+    400Error:
+      description: "Invalid Client Request"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: "A human readable error message"
+    500Error:
+      description: "Unexpected Server Error"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: "A human readable error message"
